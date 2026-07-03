@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koovu — The voice input layer for every accent</title>
+<meta name="description" content="Koovu turns your voice into polished text in any app on your Mac. Built for Indian English, Tamil, Tanglish — and every accent Big Tech ignores. Your keys, your machine. Free forever.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050506; --panel:#0c0c10; --panel2:#111117; --border:#232329;
+  --text:#ededf2; --muted:#8a8a94; --faint:#55555e;
+  --brand:#6c63ff; --brand-soft:#6c63ff1f; --brand-line:#6c63ff55;
+  --ok:#34d399; --warn:#f5a524;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --sans:"Inter", -apple-system, sans-serif;
+  --disp:"Space Grotesk", "Inter", sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);
+     font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--brand);color:#fff}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.mono{font-family:var(--mono)}
+
+/* hatched divider — the sent.dm stitch */
+.hatch{height:14px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  background:repeating-linear-gradient(-45deg,transparent 0 6px,#1b1b22 6px 7px)}
+
+/* ---------------- nav ---------------- */
+nav{position:sticky;top:0;z-index:50;background:#050506e6;backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border)}
+nav .wrap{display:flex;align-items:center;gap:10px;height:58px}
+.logo{display:flex;align-items:flex-end;gap:3px;height:20px}
+.logo i{width:4.5px;background:var(--text);border-radius:3px;display:block}
+.logo i:nth-child(1){height:11px}.logo i:nth-child(2){height:19px}.logo i:nth-child(3){height:14px}
+nav b{font-family:var(--disp);font-size:17px;font-weight:600;letter-spacing:.3px}
+nav .links{margin-left:auto;display:flex;gap:26px;font-size:13.5px;color:var(--muted)}
+nav .links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--text);color:#0a0a0c;
+     font-weight:600;font-size:14px;padding:10px 20px;border-radius:8px;border:0;cursor:pointer;
+     transition:transform .12s ease, background .12s}
+.btn:hover{background:#fff;transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn.ghost:hover{border-color:var(--brand);background:var(--brand-soft)}
+nav .btn{padding:8px 16px;font-size:13px}
+
+/* ---------------- hero ---------------- */
+.hero{padding:88px 0 72px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;color:var(--brand);
+         text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:1px;background:var(--brand)}
+h1{font-family:var(--disp);font-size:52px;line-height:1.06;font-weight:700;letter-spacing:-1.2px;margin-bottom:20px}
+h1 em{font-style:normal;color:var(--brand)}
+.sub{color:var(--muted);font-size:17px;max-width:480px;margin-bottom:30px}
+.cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.dlmeta{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:14px}
+.dlmeta b{color:var(--ok);font-weight:500}
+.counter{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--border);
+  border-radius:20px;padding:7px 14px;display:inline-flex;gap:8px;align-items:center}
+.counter b{color:var(--text)}
+.counter .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+/* demo terminal — the signature */
+.demo{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;
+      position:relative;box-shadow:0 0 0 1px #6c63ff14, 0 30px 80px -30px #6c63ff2e}
+.demo .bar{display:flex;align-items:center;gap:6px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.demo .bar s{width:10px;height:10px;border-radius:50%;background:#2b2b33;display:block}
+.demo .bar .t{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.demo .body{padding:18px;font-family:var(--mono);font-size:12.5px;min-height:270px}
+.dstep{margin-bottom:16px;opacity:.35;transition:opacity .3s}
+.dstep.live{opacity:1}
+.dlabel{font-size:9.5px;letter-spacing:2px;color:var(--faint);margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.dstep.live .dlabel{color:var(--brand)}
+.dtext{color:var(--muted);line-height:1.7;min-height:20px;white-space:pre-wrap}
+.dstep.live .dtext{color:var(--text)}
+.dtext .strike{color:var(--faint);text-decoration:line-through}
+.dtext .caret{display:inline-block;width:7px;height:14px;background:var(--brand);
+  vertical-align:-2px;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.corner{position:absolute;width:10px;height:10px;border:1.5px solid var(--brand)}
+.corner.tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.corner.tr{top:-1px;right:-1px;border-left:0;border-bottom:0}
+.corner.bl{bottom:-1px;left:-1px;border-right:0;border-top:0}
+.corner.br{bottom:-1px;right:-1px;border-left:0;border-top:0}
+
+/* ---------------- sections ---------------- */
+section{padding:84px 0}
+.shead{max-width:640px;margin-bottom:48px}
+.shead h2{font-family:var(--disp);font-size:34px;font-weight:700;letter-spacing:-.7px;line-height:1.15;margin:14px 0 14px}
+.shead p{color:var(--muted);font-size:15.5px}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative}
+.node{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 16px;position:relative}
+.node.hot{border-color:var(--brand-line);box-shadow:0 0 24px #6c63ff14}
+.node .nlabel{font-family:var(--mono);font-size:9.5px;letter-spacing:2px;color:var(--faint);
+  text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.node .nlabel s{width:6px;height:6px;border-radius:50%;background:var(--ok);display:block;text-decoration:none}
+.node h3{font-family:var(--disp);font-size:16px;font-weight:600;margin-bottom:6px}
+.node p{color:var(--muted);font-size:12.5px;line-height:1.55}
+.node .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{font-family:var(--mono);font-size:10px;border:1px solid var(--border);color:var(--muted);
+     border-radius:4px;padding:3px 7px}
+.tag.soon{border-style:dashed;color:var(--faint)}
+.pipe::before{content:"";position:absolute;top:50%;left:4%;right:4%;height:1px;
+  background:repeating-linear-gradient(90deg,var(--brand-line) 0 8px,transparent 8px 14px);z-index:-1}
+
+/* accents grid */
+.accents{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.acc{border:1px solid var(--border);border-radius:9px;padding:14px 15px;background:var(--panel)}
+.acc b{font-family:var(--disp);font-size:14.5px;font-weight:600;display:block;margin-bottom:3px}
+.acc span{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.acc.live span{color:var(--ok)}
+.acc.soon{opacity:.65}.acc.soon span{color:var(--faint)}
+.acc.soon b{color:var(--muted)}
+.example{margin-top:44px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ex{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px}
+.ex .who{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--faint);margin-bottom:10px;text-transform:uppercase}
+.ex.k{border-color:var(--brand-line)}
+.ex.k .who{color:var(--brand)}
+.ex p{font-family:var(--mono);font-size:12.5px;color:var(--muted);line-height:1.7}
+.ex.k p{color:var(--text)}
+
+/* privacy */
+.priv{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:22px}
+.pcard h3{font-family:var(--disp);font-size:16.5px;font-weight:600;margin-bottom:8px}
+.pcard p{color:var(--muted);font-size:13px}
+.pcard .mono{color:var(--brand);font-size:11.5px;display:block;margin-top:12px}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--border)}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+td:first-child{color:var(--muted)}
+th.k,td.k{background:#6c63ff0d;border-left:1px solid var(--brand-line);border-right:1px solid var(--brand-line)}
+th.k{color:var(--brand)}
+tr:first-child th.k{border-top:1px solid var(--brand-line);border-radius:8px 8px 0 0}
+.yes{color:var(--ok)}.no{color:var(--faint)}
+
+/* api band */
+.band{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:44px;
+      display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center;position:relative}
+.band h2{font-family:var(--disp);font-size:28px;font-weight:700;letter-spacing:-.5px;margin:10px 0 12px}
+.band p{color:var(--muted);font-size:14.5px}
+.band pre{background:#08080b;border:1px solid var(--border);border-radius:9px;padding:18px;
+  font-family:var(--mono);font-size:12px;color:var(--muted);overflow-x:auto;line-height:1.8}
+.band pre .c{color:var(--brand)}
+.pill{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--warn);
+  border:1px solid #92400e;background:#271a05;border-radius:4px;padding:4px 9px;text-transform:uppercase}
+
+/* download */
+.dl{text-align:center;padding:100px 0}
+.dl h2{font-family:var(--disp);font-size:40px;font-weight:700;letter-spacing:-1px;margin-bottom:14px}
+.dl p{color:var(--muted);margin-bottom:30px}
+.dl .cta{justify-content:center}
+
+footer{border-top:1px solid var(--border);padding:34px 0;color:var(--faint);
+  font-family:var(--mono);font-size:11.5px}
+footer .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+footer a:hover{color:var(--text)}
+footer .r{margin-left:auto}
+.waitlist{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;margin-top:18px;padding-top:18px;border-top:1px solid var(--border)}
+.waitlist input{flex:1;min-width:200px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:12px}
+.waitlist input::placeholder{color:var(--faint)}
+.waitlist input:focus{outline:none;border-color:var(--brand)}
+#wl-msg{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* apple logo in buttons */
+.apl{margin-right:2px;position:relative;top:-1px}
+
+/* ---------------- menu bar showcase ---------------- */
+.screen{position:relative;border:1px solid var(--border);border-radius:16px;
+  background:radial-gradient(120% 140% at 80% 0%, #14141f 0%, #0a0a0e 55%, #07070a 100%);
+  min-height:520px;overflow:hidden;
+  box-shadow:0 0 0 1px #6c63ff10, 0 40px 100px -40px #6c63ff26}
+.zoomfx{transform:scale(.93);transition:opacity .7s ease, transform .9s cubic-bezier(.2,.7,.2,1)}
+.zoomfx.in{transform:scale(1)}
+.mbar{display:flex;align-items:center;justify-content:flex-end;gap:16px;
+  padding:8px 18px;background:#0d0d12cc;border-bottom:1px solid #ffffff0d;
+  font-family:var(--mono);font-size:11px;color:#c9c9d2}
+.mb-koovu{display:flex;align-items:flex-end;gap:2px;height:13px;padding:0 2px}
+.mb-koovu i{width:3px;background:#e8e8ee;border-radius:2px;display:block;animation:mbbar 1.4s ease-in-out infinite}
+.mb-koovu i:nth-child(1){height:7px;animation-delay:.15s}
+.mb-koovu i:nth-child(2){height:12px}
+.mb-koovu i:nth-child(3){height:9px;animation-delay:.3s}
+@keyframes mbbar{0%,100%{transform:scaleY(.6)}50%{transform:scaleY(1.15)}}
+.mb-ico{opacity:.75;font-size:12px}
+.mb-time{opacity:.9}
+.pop{width:330px;margin:14px 22px 0 auto;background:#0b0b0fef;border:1px solid #2c2c34;
+  border-radius:13px;backdrop-filter:blur(10px);overflow:hidden;
+  box-shadow:0 24px 70px -18px #000000cc, 0 0 0 1px #6c63ff12;
+  animation:popin .5s cubic-bezier(.2,.9,.3,1.2) both;animation-play-state:paused}
+.in .pop{animation-play-state:running}
+@keyframes popin{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:none}}
+.pop-head{display:flex;align-items:center;gap:8px;padding:13px 15px 8px}
+.poplogo{display:flex;align-items:flex-end;gap:2px;height:14px}
+.poplogo i{width:3.5px;background:var(--brand);border-radius:2px;display:block}
+.poplogo i:nth-child(1){height:8px}.poplogo i:nth-child(2){height:14px}.poplogo i:nth-child(3){height:10px}
+.pop-head b{font-family:var(--disp);font-size:14px}
+.pop-live{margin-left:auto;font-family:var(--mono);font-size:8.5px;color:var(--ok);letter-spacing:1px}
+.pop-tabs{display:flex;gap:4px;padding:6px 12px 12px;font-family:var(--mono);font-size:9px;
+  letter-spacing:1.5px;color:var(--faint)}
+.pop-tabs u{text-decoration:none;padding:5px 10px;border-radius:5px}
+.pop-tabs u.on{background:#17171e;color:var(--text);border:1px solid #2c2c34}
+.pop-hero{margin:0 12px;border:1px solid #34316b;border-radius:9px;padding:16px 12px;text-align:center;
+  box-shadow:inset 0 0 30px #6c63ff0d}
+.pop-wave{display:flex;justify-content:center;align-items:flex-end;gap:3px;height:24px;margin-bottom:10px}
+.pop-wave i{width:4px;background:#e8e8ee;border-radius:2px;display:block;animation:mbbar 1.6s ease-in-out infinite}
+.pop-wave i:nth-child(1){height:10px;animation-delay:.1s}
+.pop-wave i:nth-child(2){height:18px;animation-delay:.25s}
+.pop-wave i:nth-child(3){height:24px}
+.pop-wave i:nth-child(4){height:14px;animation-delay:.35s}
+.pop-wave i:nth-child(5){height:8px;animation-delay:.2s}
+.pop-big{font-family:var(--mono);font-size:34px;font-weight:600;line-height:1.1}
+.pop-lbl{font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--muted);margin-top:3px}
+.pop-stats{display:flex;gap:8px;margin-top:13px}
+.pop-stats div{flex:1;background:#101016;border:1px solid #26262e;border-radius:7px;padding:8px 4px}
+.pop-stats b{font-family:var(--mono);font-size:13px;display:block}
+.pop-stats span{font-family:var(--mono);font-size:7px;letter-spacing:1px;color:var(--faint)}
+.pop-hint{font-family:var(--mono);font-size:9px;color:var(--faint);text-align:center;padding:12px 0 14px}
+.pop-hint kbd{background:#17171e;border:1px solid #2c2c34;border-radius:4px;padding:1px 5px;color:#c9c9d2}
+@media (prefers-reduced-motion: reduce){
+  .mb-koovu i,.pop-wave i{animation:none}
+  .zoomfx{transform:none}
+  .pop{animation:none;opacity:1}
+}
+@media (max-width:540px){.pop{margin:14px auto 0;width:min(330px,92%)}.screen{min-height:480px}}
+
+/* reveal on scroll */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+
+@media (prefers-reduced-motion: reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  .counter .dot,.dtext .caret{animation:none}
+  html{scroll-behavior:auto}
+}
+@media (max-width: 900px){
+  .hero{grid-template-columns:1fr;padding:56px 0 48px}
+  h1{font-size:38px}
+  .pipe,.accents{grid-template-columns:1fr 1fr}
+  .pipe::before{display:none}
+  .priv,.example,.band{grid-template-columns:1fr}
+  nav .links{display:none}
+}
+@media (max-width: 540px){
+  .pipe,.accents{grid-template-columns:1fr}
+  h1{font-size:33px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo"><i></i><i></i><i></i></div><b>koovu</b>
+    <div class="links">
+      <a href="#how">How it works</a>
+      <a href="#accents">Accents</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#api">API</a>
+    </div>
+    <a class="btn" href="#download">Download</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div>
+    <div class="eyebrow">The voice input layer</div>
+    <h1>Built for every accent <em>Big Tech ignores.</em></h1>
+    <p class="sub">Koovu turns your voice into polished text in any app on your Mac.
+    Indian English, Tamil, Tanglish — heard right the first time, cleaned up by AI,
+    typed where your cursor is.</p>
+    <div class="cta">
+      <a class="btn" id="dl-top" href="#download"><svg class="apl" viewBox="0 0 814 1000" width="14" height="14" fill="currentColor"><path d="M788 341c-6 4-108 62-108 190 0 148 130 200 134 202-1 3-21 71-69 141-43 61-88 122-156 122s-86-40-165-40c-77 0-104 41-167 41s-107-57-157-127C42 787 0 661 0 541c0-192 125-294 248-294 65 0 120 43 161 43 39 0 100-45 174-45 28 0 129 2 205 96zM554 159c31-37 53-88 53-139 0-7-1-14-2-20-50 2-110 34-146 76-29 33-56 84-56 136 0 8 1 16 2 18 3 1 8 2 13 2 45 0 102-30 136-73z"/></svg>Download for macOS</a>
+      <span class="counter"><span class="dot"></span><b id="count">—</b>&nbsp;downloads</span>
+    </div>
+    <div class="dlmeta"><b>FREE FOREVER</b> · macOS 13 Ventura or later · Apple Silicon & Intel · ~40 MB</div>
+  </div>
+
+  <div class="demo">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="bar"><s></s><s></s><s></s><span class="t">koovu — live</span></div>
+    <div class="body">
+      <div class="dstep" id="st0">
+        <div class="dlabel">● YOU SPEAK</div>
+        <div class="dtext" id="t0"></div>
+      </div>
+      <div class="dstep" id="st1">
+        <div class="dlabel">◦ RAW TRANSCRIPT</div>
+        <div class="dtext" id="t1"></div>
+      </div>
+      <div class="dstep" id="st2">
+        <div class="dlabel">▮▮▮ KOOVU WRITES</div>
+        <div class="dtext" id="t2"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="hatch"></div>
+
+<!-- ================= HOW ================= -->
+<section id="how">
+  <div class="wrap">
+    <div class="shead rv">
+      <span class="eyebrow">Pipeline</span>
+      <h2>Four stages between your voice and perfect text.</h2>
+      <p>Koovu is not another dictation toy. It's a pipeline — swappable ears, a
+      learning layer that adapts to <i>you</i>, and a writing brain. Every stage runs
+      with your own API keys.</p>
+    </div>
+    <div class="pipe rv">
+      <div class="node">
+        <div class="nlabel"><s></s>01 · Capture</div>
+        <h3>One hotkey, anywhere</h3>
+        <p>Tap your hotkey in any text field. A floating indicator shows Koovu is
+        listening — words stream in live as you talk.</p>
+        <div class="tags"><span class="tag">macOS native</span><span class="tag">global hotkey</span></div>
+      </div>
+      <div class="node">
+        <div class="nlabel"><s></s>02 · Ears</div>
+        <h3>Best-in-class ASR</h3>
+        <p>Streaming or batch speech recognition — pick your engine, pay the
+        provider directly, or run local.</p>
+        <div class="tags"><span class="tag">Deepgram</span><span class="tag">Whisper · Groq</span><span class="tag soon">Ollama — soon</span></div>
+      </div>
+      <div class="node hot">
+        <div class="nlabel"><s></s>03 · Koovu layer</div>
+        <h3>Learns your voice</h3>
+        <p>Accent handling, your personal dictionary, learned corrections.
+        Mistake taught once is fixed forever. This is the part nobody else builds.</p>
+        <div class="tags"><span class="tag">accent profiles</span><span class="tag">corrections</span><span class="tag">vocabulary</span></div>
+      </div>
+      <div class="node">
+        <div class="nlabel"><s></s>04 · Brain</div>
+        <h3>LLM cleanup</h3>
+        <p>Fillers gone, self-corrections resolved, formatting applied — emails
+        become emails, Slack stays casual.</p>
+        <div class="tags"><span class="tag">Llama 3.3 · Groq</span><span class="tag">context aware</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hatch"></div>
+
+<!-- ================= MENU BAR ================= -->
+<section id="menubar">
+  <div class="wrap">
+    <div class="shead rv">
+      <span class="eyebrow">Always there</span>
+      <h2>Lives in your menu bar. Stays out of your way.</h2>
+      <p>No dock icon, no window to manage. Koovu sits next to your Control Center —
+      the bars dance while you speak, and one click opens your stats, dictionary,
+      and settings.</p>
+    </div>
+    <div class="screen rv zoomfx">
+      <div class="mbar">
+        <span class="mb-koovu"><i></i><i></i><i></i></span>
+        <span class="mb-ico">◐</span><span class="mb-ico">⌥</span>
+        <span class="mb-ico">▤</span><span class="mb-ico">⌕</span>
+        <span class="mb-time">Thu Jul 2&nbsp; 8:48 PM</span>
+      </div>
+      <div class="pop">
+        <div class="pop-head">
+          <span class="poplogo"><i></i><i></i><i></i></span><b>koovu</b>
+          <span class="pop-live">● LISTENING</span>
+        </div>
+        <div class="pop-tabs"><u class="on">HOME</u><u>DICTIONARY</u><u>SETTINGS</u><u>ABOUT</u></div>
+        <div class="pop-hero">
+          <div class="pop-wave"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="pop-big">1,995</div>
+          <div class="pop-lbl">WORDS SPOKEN TODAY</div>
+          <div class="pop-stats">
+            <div><b>7</b><span>DAY STREAK</span></div>
+            <div><b>66</b><span>DICTATIONS</span></div>
+            <div><b>12.4k</b><span>TOTAL WORDS</span></div>
+          </div>
+        </div>
+        <div class="pop-hint">tap <kbd>left ctrl</kbd> in any text field · talk · tap again</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hatch"></div>
+
+<!-- ================= ACCENTS ================= -->
+<section id="accents">
+  <div class="wrap">
+    <div class="shead rv">
+      <span class="eyebrow">Accents</span>
+      <h2>2 billion people sound "wrong" to their computers. We started there.</h2>
+      <p>Every voice tool is tuned for one American accent. Koovu ships accent-first —
+      live today for Indian voices, expanding one community at a time.</p>
+    </div>
+    <div class="accents rv">
+      <div class="acc live"><b>Indian English</b><span>● live</span></div>
+      <div class="acc live"><b>Tamil</b><span>● live</span></div>
+      <div class="acc live"><b>Tanglish</b><span>● live</span></div>
+      <div class="acc soon"><b>Hinglish</b><span>next</span></div>
+      <div class="acc soon"><b>Telugu English</b><span>soon</span></div>
+      <div class="acc soon"><b>Kannada English</b><span>soon</span></div>
+      <div class="acc soon"><b>Malayalam English</b><span>soon</span></div>
+      <div class="acc soon"><b>Bengali English</b><span>soon</span></div>
+      <div class="acc soon"><b>Singlish</b><span>soon</span></div>
+      <div class="acc soon"><b>Taglish</b><span>soon</span></div>
+      <div class="acc soon"><b>Nigerian English</b><span>soon</span></div>
+      <div class="acc soon"><b>Spanglish</b><span>soon</span></div>
+    </div>
+    <div class="example rv">
+      <div class="ex">
+        <div class="who">What other tools hear</div>
+        <p>"Sorry the man report will be shared by nan by Monday, sir I will ping
+        you a prom meeting mud in gentleman."</p>
+      </div>
+      <div class="ex k">
+        <div class="who">What Koovu writes</div>
+        <p>"The main report will be shared by naan by Monday. Seri, I'll ping you
+        aprom, meeting mudinjadhum."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hatch"></div>
+
+<!-- ================= PRIVACY ================= -->
+<section id="privacy">
+  <div class="wrap">
+    <div class="shead rv">
+      <span class="eyebrow">Privacy</span>
+      <h2>No middleman. Ever.</h2>
+      <p>Wispr Flow routes your voice through their servers. Koovu has no servers —
+      the app runs on your Mac and talks straight to the AI provider with
+      <i>your</i> keys.</p>
+    </div>
+    <div class="priv rv">
+      <div class="pcard">
+        <h3>Your keys, your accounts</h3>
+        <p>You bring free API keys from Groq and Deepgram. Your audio goes directly
+        to them under your own account — we never see or store your voice.</p>
+        <span class="mono">audio → provider. koovu ∉ path.</span>
+      </div>
+      <div class="pcard">
+        <h3>Everything lives on your machine</h3>
+        <p>Dictionary, corrections, history, stats — all in a local folder you own.
+        Delete it and Koovu forgets you existed.</p>
+        <span class="mono">~/.koovu/config.json</span>
+      </div>
+      <div class="pcard">
+        <h3>Open source, fully offline soon</h3>
+        <p>Read every line on GitHub. Local Whisper and Ollama support are on the
+        roadmap — a mode where nothing ever leaves your Mac.</p>
+        <span class="mono">github.com/koovu</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hatch"></div>
+
+<!-- ================= VS ================= -->
+<section id="vs">
+  <div class="wrap">
+    <div class="shead rv">
+      <span class="eyebrow">The obvious question</span>
+      <h2>"Isn't this just Wispr Flow?"</h2>
+      <p>Wispr Flow is a great product — for one accent, fifteen dollars a month,
+      through their cloud. We disagree with all three.</p>
+    </div>
+    <div class="rv" style="overflow-x:auto">
+    <table>
+      <tr><th></th><th class="k">Koovu</th><th>Wispr Flow</th><th>Apple Dictation</th></tr>
+      <tr><td>Price</td><td class="k"><b>$0</b> — your own keys</td><td>$15/month</td><td>Free</td></tr>
+      <tr><td>Indian English & Tanglish</td><td class="k"><span class="yes">●</span> tuned for it</td><td><span class="no">○</span> generic</td><td><span class="no">○</span> struggles</td></tr>
+      <tr><td>AI cleanup & formatting</td><td class="k"><span class="yes">●</span></td><td><span class="yes">●</span></td><td><span class="no">○</span></td></tr>
+      <tr><td>Teachable dictionary</td><td class="k"><span class="yes">●</span> corrections learned forever</td><td>partial</td><td><span class="no">○</span></td></tr>
+      <tr><td>Voice data path</td><td class="k">you → your provider</td><td>you → their servers</td><td>on device</td></tr>
+      <tr><td>Open source</td><td class="k"><span class="yes">●</span></td><td><span class="no">○</span></td><td><span class="no">○</span></td></tr>
+      <tr><td>Choose / swap AI engines</td><td class="k"><span class="yes">●</span> Deepgram · Groq · local soon</td><td><span class="no">○</span></td><td><span class="no">○</span></td></tr>
+    </table>
+    </div>
+  </div>
+</section>
+
+<div class="hatch"></div>
+
+<!-- ================= API ================= -->
+<section id="api">
+  <div class="wrap">
+    <div class="band rv">
+      <div>
+        <span class="pill">Coming soon</span>
+        <h2>The Koovu API</h2>
+        <p>The same accent-aware voice layer, as one endpoint for your product.
+        Accent profiles, personal dictionaries, and cleanup — voice input your
+        users don't have to fight. B2B early access opening after the public beta.</p>
+      </div>
+      <pre><span class="c">POST</span> api.koovu.co/v1/transcribe
+
+{
+  "audio":   "&lt;stream&gt;",
+  "profile": "en-IN.tanglish",
+  "cleanup": "email"
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DOWNLOAD ================= -->
+<section class="dl" id="download">
+  <div class="wrap rv">
+    <div class="logo" style="justify-content:center;height:30px;margin:0 auto 22px;display:flex"><i style="width:7px"></i><i style="width:7px"></i><i style="width:7px"></i></div>
+    <h2>Stop typing. Start talking.</h2>
+    <p>Free forever. Two free API keys and two minutes of setup.</p>
+    <div class="cta">
+      <a class="btn" id="dl-main" href="https://github.com/iamyogesh2001/koovu/releases/download/v0.1.0/Koovu.dmg" download><svg class="apl" viewBox="0 0 814 1000" width="14" height="14" fill="currentColor"><path d="M788 341c-6 4-108 62-108 190 0 148 130 200 134 202-1 3-21 71-69 141-43 61-88 122-156 122s-86-40-165-40c-77 0-104 41-167 41s-107-57-157-127C42 787 0 661 0 541c0-192 125-294 248-294 65 0 120 43 161 43 39 0 100-45 174-45 28 0 129 2 205 96zM554 159c31-37 53-88 53-139 0-7-1-14-2-20-50 2-110 34-146 76-29 33-56 84-56 136 0 8 1 16 2 18 3 1 8 2 13 2 45 0 102-30 136-73z"/></svg>Download Koovu for macOS</a>
+      <a class="btn ghost" href="https://github.com/iamyogesh2001/koovu">View on GitHub</a>
+    </div>
+    <div class="dlmeta" style="margin-top:18px">macOS 13+ · Apple Silicon & Intel · <span id="count2">—</span> downloads · unsigned beta — right-click → Open on first launch</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>koovu © 2026</span>
+    <a href="#how">how it works</a>
+    <a href="#privacy">privacy</a>
+    <a href="https://github.com/iamyogesh2001/koovu">github</a>
+    <span class="r">your voice, your words</span>
+  </div>
+  <form class="waitlist wrap" id="waitlist">
+    <input type="email" id="wl-email" placeholder="you@email.com" required autocomplete="email">
+    <button type="submit" class="btn" style="padding:9px 16px;font-size:12px">Join waitlist</button>
+    <span id="wl-msg"></span>
+  </form>
+</footer>
+
+<script>
+/* ---------- demo loop ---------- */
+const SCENES = [
+  {
+    speak: "umm so write this as an email... hi priya, no wait — hi team, the demo got moved to friday, 3pm chennai time, sharp",
+    raw:   "umm so write this as an email hi priya no wait hi team the demo got moved to friday 3pm chennai time sharp",
+    out:   "Hi team,\n\nThe demo has been moved to Friday, 3 PM Chennai time — sharp.\n\nThanks"
+  },
+  {
+    speak: "seri da, naan will push the fix aprom... meeting mudinjadhum I'll ping you",
+    raw:   "seri da naan will push the fix aprom meeting mudinjadhum i'll ping you",
+    out:   "Seri da, naan will push the fix aprom. Meeting mudinjadhum, I'll ping you."
+  },
+  {
+    speak: "tell deepgram team there are two... umm no wait, three blockers on the launch",
+    raw:   "tell deepgram team there are two umm no wait three blockers on the launch",
+    out:   "Tell the Deepgram team there are three blockers on the launch."
+  }
+];
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const steps = [0,1,2].map(i => document.getElementById("st"+i));
+const outs  = [0,1,2].map(i => document.getElementById("t"+i));
+
+function typeInto(el, text, speed, done) {
+  if (reduced) { el.textContent = text; done && done(); return; }
+  el.innerHTML = ""; let i = 0;
+  const caret = document.createElement("span"); caret.className = "caret";
+  el.appendChild(caret);
+  const t = setInterval(() => {
+    caret.insertAdjacentText("beforebegin", text[i++]);
+    if (i >= text.length) { clearInterval(t); caret.remove(); done && done(); }
+  }, speed);
+}
+let scene = 0;
+function playScene() {
+  const s = SCENES[scene % SCENES.length]; scene++;
+  steps.forEach(x => x.classList.remove("live"));
+  outs.forEach(x => x.textContent = "");
+  steps[0].classList.add("live");
+  typeInto(outs[0], s.speak, 34, () => {
+    setTimeout(() => {
+      steps[0].classList.remove("live"); steps[1].classList.add("live");
+      outs[1].textContent = s.raw;
+      setTimeout(() => {
+        steps[1].classList.remove("live"); steps[2].classList.add("live");
+        typeInto(outs[2], s.out, 16, () => setTimeout(playScene, 3600));
+      }, 1100);
+    }, 500);
+  });
+}
+playScene();
+
+/* ---------- reveal on scroll ---------- */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}), {threshold:.12});
+document.querySelectorAll(".rv").forEach(el => io.observe(el));
+
+/* ---------- download counter + waitlist (Supabase) ---------- */
+const SB_URL = "https://kvvdscjpyvodmnuuqwul.supabase.co";
+const SB_KEY = "sb_publishable_7oxx8MZkg643zsF2Uj5BIw_9PodxF8i";
+const FN_URL = SB_URL + "/functions/v1/increment-downloads";
+const SB_HEADERS = {
+  apikey: SB_KEY,
+  Authorization: "Bearer " + SB_KEY,
+  "Content-Type": "application/json",
+};
+
+const $c = document.getElementById("count"), $c2 = document.getElementById("count2");
+function setCount(n) {
+  const v = (n || 10).toLocaleString();
+  $c.textContent = v;
+  $c2.textContent = v;
+}
+
+async function fetchCount() {
+  try {
+    const r = await fetch(SB_URL + "/rest/v1/stats?key=eq.downloads&select=count", {
+      headers: SB_HEADERS,
+    });
+    if (!r.ok) throw new Error("stats fetch failed");
+    const rows = await r.json();
+    setCount(rows[0]?.count ?? 10);
+  } catch (_) {
+    setCount(10);
+  }
+}
+
+async function bumpCount() {
+  try {
+    const r = await fetch(FN_URL, { method: "POST", headers: SB_HEADERS });
+    if (!r.ok) throw new Error("increment failed");
+    const d = await r.json();
+    setCount(d.count);
+  } catch (_) {}
+}
+
+fetchCount();
+["dl-top", "dl-main"].forEach(id => {
+  document.getElementById(id).addEventListener("click", () => bumpCount());
+});
+
+document.getElementById("waitlist").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = document.getElementById("wl-email").value.trim().toLowerCase();
+  const msg = document.getElementById("wl-msg");
+  if (!email) return;
+  msg.textContent = "Joining…";
+  msg.style.color = "var(--muted)";
+  try {
+    const r = await fetch(SB_URL + "/rest/v1/waitlist", {
+      method: "POST",
+      headers: { ...SB_HEADERS, Prefer: "return=minimal" },
+      body: JSON.stringify({ email }),
+    });
+    if (r.status === 409 || !r.ok && r.status !== 201) {
+      const err = await r.json().catch(() => ({}));
+      if (r.status === 409 || err.code === "23505") {
+        msg.textContent = "You're already on the list.";
+        msg.style.color = "var(--ok)";
+        return;
+      }
+      throw new Error("waitlist failed");
+    }
+    msg.textContent = "You're on the list — we'll be in touch.";
+    msg.style.color = "var(--ok)";
+    e.target.reset();
+  } catch (_) {
+    msg.textContent = "Something went wrong. Try again.";
+    msg.style.color = "var(--warn)";
+  }
+});
+</script>
+</body>
+</html>

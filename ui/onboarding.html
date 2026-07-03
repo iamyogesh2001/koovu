@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome to Koovu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg:#0a0a0a; --panel:#111111; --panel2:#161616; --border:#262626;
+    --border2:#333333; --text:#fafafa; --muted:#8f8f8f; --faint:#525252;
+    --hatch:repeating-linear-gradient(45deg,#1c1c1c 0 5px,transparent 5px 11px);
+    --mono:"SF Mono", ui-monospace, Menlo, monospace;
+    --sans:-apple-system, "Inter", sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);
+       font-size:13px;display:flex;flex-direction:column;overflow:hidden;
+       border:1px solid var(--border2);border-radius:12px}
+
+  .hatchband{height:8px;background:var(--hatch);border-top:1px solid var(--border);
+             border-bottom:1px solid var(--border)}
+
+  header{display:flex;align-items:center;gap:9px;padding:16px 22px 12px}
+  .logo{display:flex;align-items:flex-end;gap:2.5px;height:18px}
+  .logo i{width:4px;background:var(--text);border-radius:2px;display:block}
+  .logo i:nth-child(1){height:10px}.logo i:nth-child(2){height:17px}.logo i:nth-child(3){height:13px}
+  header h1{font-size:15px;font-weight:650;letter-spacing:.3px}
+  header .step-label{margin-left:auto;font-family:var(--mono);font-size:10px;
+                     color:var(--faint);letter-spacing:1px;text-transform:uppercase}
+
+  main{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column}
+  .step{display:none;flex:1;flex-direction:column}
+  .step.on{display:flex}
+
+  .step h2{font-size:22px;font-weight:650;letter-spacing:-.3px;margin-bottom:8px}
+  .step > p{color:var(--muted);line-height:1.65;font-size:13px;margin-bottom:18px}
+
+  /* welcome */
+  .wave{display:flex;justify-content:center;align-items:flex-end;gap:6px;height:56px;margin:26px 0 22px}
+  .wave i{width:8px;background:var(--text);border-radius:4px;display:block;
+          animation:bar 1.6s ease-in-out infinite}
+  .wave i:nth-child(1){animation-delay:0s}.wave i:nth-child(2){animation-delay:.22s}
+  .wave i:nth-child(3){animation-delay:.44s}.wave i:nth-child(4){animation-delay:.1s}
+  .wave i:nth-child(5){animation-delay:.33s}
+  @keyframes bar{0%,100%{height:14px;opacity:.35}50%{height:52px;opacity:1}}
+  .center{text-align:center}
+  .tagline{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1.4px;
+           text-transform:uppercase;margin-bottom:6px}
+
+  /* cards / rows */
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+        padding:14px 15px;margin-bottom:10px;position:relative}
+  .card h3{font-size:13px;font-weight:600;margin-bottom:3px}
+  .card p{color:var(--muted);font-size:11.5px;line-height:1.55}
+  .card .tag{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:9px;
+             letter-spacing:1px;padding:3px 8px;border-radius:4px;text-transform:uppercase;
+             background:#1c1c1c;color:var(--text);border:1px solid var(--border2)}
+
+  /* engine choice */
+  .choice{cursor:pointer;transition:border-color .12s}
+  .choice:hover{border-color:#4d4d4d}
+  .choice.sel{border-color:#8f8f8f;background:var(--panel2)}
+  .choice .radio{position:absolute;top:14px;right:12px;width:14px;height:14px;border-radius:50%;
+                 border:1.5px solid var(--border2)}
+  .choice.sel .radio{border-color:var(--text);background:radial-gradient(circle, var(--text) 0 4px, transparent 5px)}
+  .choice .tag{right:36px}
+
+  /* permission rows */
+  .perm{display:flex;align-items:center;gap:12px}
+  .perm .info{flex:1}
+  .perm button{white-space:nowrap}
+
+  kbd{background:var(--panel2);border:1px solid var(--border2);border-radius:4px;
+      padding:2px 7px;color:var(--text);font-family:var(--mono);font-size:11px}
+
+  .keyfield{margin-top:8px}
+  .keyfield label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);
+                  letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+  .keyfield .linkline{font-size:11px;color:var(--faint);margin-top:6px;font-family:var(--mono)}
+  .keyfield .linkline b{color:var(--muted);font-weight:500}
+  input{background:#0d0d0d;border:1px solid var(--border);border-radius:7px;width:100%;
+    color:var(--text);font-family:var(--mono);font-size:11.5px;padding:9px 11px;outline:none}
+  input:focus{border-color:#666666}
+
+  button.small{background:var(--panel2);border:1px solid var(--border2);color:var(--text);
+    border-radius:7px;padding:8px 14px;font-family:var(--mono);font-size:11px;cursor:pointer}
+  button.small:hover{border-color:#666666}
+
+  /* footer nav */
+  .navbar{display:flex;align-items:center;gap:10px;padding:14px 22px 18px}
+  .dots{display:flex;gap:6px;margin-right:auto}
+  .dots i{width:6px;height:6px;border-radius:50%;background:var(--border2);display:block;transition:background .2s}
+  .dots i.on{background:var(--text)}
+  button.ghost{background:none;border:0;color:var(--faint);font-size:12px;cursor:pointer;font-family:var(--sans)}
+  button.ghost:hover{color:var(--muted)}
+  button.next{background:var(--text);color:#0a0a0a;border:0;border-radius:8px;
+    padding:10px 26px;font-weight:600;font-size:13px;cursor:pointer;font-family:var(--sans)}
+  button.next:hover{background:#d4d4d4}
+  button.back{background:none;border:1px solid var(--border2);color:var(--muted);border-radius:8px;
+    padding:9px 18px;font-size:13px;cursor:pointer;font-family:var(--sans)}
+  button.back:hover{color:var(--text);border-color:#666666}
+
+  .done-icon{font-size:44px;text-align:center;margin:24px 0 14px}
+  .checklist{margin:0 auto;max-width:330px}
+  .checklist .kv{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;
+      padding:8px 0;border-bottom:1px solid var(--border);color:var(--muted)}
+  .checklist .kv:last-child{border:0}
+  .checklist .kv b{color:var(--text);font-weight:500}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><i></i><i></i><i></i></div>
+  <h1>koovu</h1>
+  <div class="step-label" id="step-label">Setup · 1 of 5</div>
+</header>
+<div class="hatchband"></div>
+
+<main>
+
+<!-- STEP 1: welcome -->
+<section class="step on" id="step-0">
+  <div class="center" style="margin:auto 0">
+    <div class="wave"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="tagline">Voice → polished text</div>
+    <h2 style="margin-bottom:10px">Welcome to Koovu</h2>
+    <p style="max-width:360px;margin:0 auto;color:var(--muted);line-height:1.7">
+      Dictate into any app on your Mac — built for Indian English, Tamil and
+      Tanglish. First, let's set up your Koovu account.
+    </p>
+  </div>
+</section>
+
+<!-- STEP 2: account (required) -->
+<section class="step" id="step-acct">
+  <h2>Create your account</h2>
+  <p>Your account backs up your settings and keys (encrypted) so you never
+     lose them. This step is required.</p>
+
+  <div id="acct-form">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input type="text" id="ac-first" placeholder="First name">
+      <input type="text" id="ac-last" placeholder="Last name">
+    </div>
+    <input type="email" id="ac-email" placeholder="Email" style="margin-bottom:8px">
+    <input type="password" id="ac-pass" placeholder="Password (min 6 characters)" style="margin-bottom:8px">
+    <input type="tel" id="ac-phone" placeholder="Phone (optional)" style="margin-bottom:12px">
+    <button class="next" style="width:100%" id="ac-submit" onclick="acctSubmit()">Create account</button>
+    <p class="center" style="margin-top:10px">
+      <button class="ghost" id="ac-mode" onclick="acctToggleMode()">Already have an account? Sign in</button>
+    </p>
+  </div>
+
+  <div id="acct-confirm" style="display:none">
+    <div class="card">
+      <h3>Check your email</h3>
+      <p>We sent a confirmation link to <b id="ac-sent-to" style="color:var(--text)"></b>.
+         Click it (keep Koovu running), then come back here.</p>
+    </div>
+    <button class="next" style="width:100%" onclick="acctVerify()">I've confirmed — continue</button>
+    <p class="center" style="margin-top:10px">
+      <button class="ghost" onclick="acctBackToForm()">Use a different email</button>
+    </p>
+  </div>
+
+  <div id="acct-done" style="display:none">
+    <div class="card">
+      <h3>Signed in ✓</h3>
+      <p>You're signed in as <b id="ac-who" style="color:var(--text)"></b>. Hit Next to continue.</p>
+    </div>
+  </div>
+
+  <p id="ac-err" style="color:#f87171;font-size:11.5px;margin-top:10px;min-height:16px"></p>
+</section>
+
+<!-- STEP 3: how it works -->
+<section class="step" id="step-1">
+  <h2>One key. Any app.</h2>
+  <p>Put your cursor in any text field, then:</p>
+  <div class="card">
+    <h3>1 · Tap <kbd>Left Ctrl</kbd></h3>
+    <p>Koovu starts listening. You'll hear a pop and see a small bubble near your cursor.</p>
+  </div>
+  <div class="card">
+    <h3>2 · Talk naturally</h3>
+    <p>English, Tamil, Tanglish — mid-sentence corrections are fine, Koovu resolves them.</p>
+  </div>
+  <div class="card">
+    <h3>3 · Tap <kbd>Left Ctrl</kbd> again</h3>
+    <p>Your words land as polished text, right where your cursor is.</p>
+  </div>
+  <p style="margin-top:8px;font-size:11.5px;color:var(--faint)">You can change the hotkey later in Settings.</p>
+</section>
+
+<!-- STEP 3: permissions -->
+<section class="step" id="step-2">
+  <h2>Two permissions</h2>
+  <p>macOS needs your OK for Koovu to hear you and type for you.</p>
+  <div class="card perm">
+    <div class="info">
+      <h3>Microphone</h3>
+      <p>Koovu may <b>not appear</b> in the list until you allow the popup.
+         In Settings → Permissions, tap <b>Request access</b>, click Allow,
+         then Koovu shows up here.</p>
+    </div>
+    <button class="small" onclick="requestMic()">Request access</button>
+    <button class="small" onclick="openPane('mic')">Open Settings</button>
+  </div>
+  <div class="card perm">
+    <div class="info">
+      <h3>Accessibility</h3>
+      <p>To type into any app and catch your hotkey. Koovu usually appears
+         here right away — toggle it <b>on</b>.</p>
+    </div>
+    <button class="small" onclick="openPane('ax')">Open Settings</button>
+  </div>
+  <p style="margin-top:8px;font-size:11.5px;color:var(--faint)">
+    Accessibility and Microphone are separate lists in macOS — seeing one
+    does not mean the other is done.
+  </p>
+</section>
+
+<!-- STEP 4: engine -->
+<section class="step" id="step-3">
+  <h2>Choose your engine</h2>
+  <p>How should Koovu turn your voice into text? You can switch anytime.</p>
+
+  <div class="card choice sel" data-engine="local_batch" onclick="pick(this)">
+    <span class="tag">Recommended</span><span class="radio"></span>
+    <h3>On-device</h3>
+    <p>Free forever, no account, audio never leaves your Mac. Downloads a 1.6&nbsp;GB model once. Needs Apple Silicon.</p>
+  </div>
+  <div class="card choice" data-engine="groq_batch" onclick="pick(this)">
+    <span class="radio"></span>
+    <h3>Groq cloud</h3>
+    <p>Same accuracy, no download. Needs a free Groq API key.</p>
+  </div>
+  <div class="card choice" data-engine="deepgram_live" onclick="pick(this)">
+    <span class="radio"></span>
+    <h3>Deepgram live</h3>
+    <p>Words appear on screen while you're still talking. Needs a Deepgram key ($200 free credit).</p>
+  </div>
+
+  <div class="keyfield" id="kf-groq">
+    <label>Groq API key — powers AI cleanup (recommended for all engines)</label>
+    <input type="password" id="ob-groq" placeholder="gsk_…">
+    <div class="linkline">Get one free: <b>console.groq.com/keys</b></div>
+  </div>
+  <div class="keyfield" id="kf-dg" style="display:none">
+    <label>Deepgram API key</label>
+    <input type="password" id="ob-dg" placeholder="deepgram key…">
+    <div class="linkline">Sign up: <b>console.deepgram.com</b> — $200 free, no card</div>
+  </div>
+</section>
+
+<!-- STEP 5: done -->
+<section class="step" id="step-4">
+  <div style="margin:auto 0">
+    <div class="done-icon">✓</div>
+    <h2 class="center" style="margin-bottom:18px">You're set</h2>
+    <div class="checklist">
+      <div class="kv"><span>Engine</span><b id="sum-engine">On-device</b></div>
+      <div class="kv"><span>Hotkey</span><b>tap Left Ctrl</b></div>
+      <div class="kv"><span>Groq cleanup</span><b id="sum-groq">—</b></div>
+      <div class="kv"><span>Settings</span><b>click the menu bar icon</b></div>
+    </div>
+    <p class="center" style="margin-top:20px;color:var(--muted);font-size:12.5px">
+      Open any app, tap <kbd>Left Ctrl</kbd>, and say something.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<div class="hatchband"></div>
+<div class="navbar">
+  <div class="dots" id="dots"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+  <button class="back" id="btn-back" onclick="go(-1)" style="display:none">Back</button>
+  <button class="next" id="btn-next" onclick="go(1)">Get started</button>
+</div>
+
+<script>
+const STATE = __KOOVU_STATE__;
+const $ = id => document.getElementById(id);
+const N = 6;                 // 0 welcome · 1 account · 2 how · 3 perms · 4 engine · 5 done
+const ACCT = 1;              // index of the account gate step
+const ENGINE_STEP = 4;
+let step = 0;
+let engine = "local_batch";
+let signedIn = false;
+let acctMode = "signup";     // or "signin"
+let pendingEmail = "", pendingPass = "";
+
+const ENGINE_NAMES = {local_batch: "On-device", groq_batch: "Groq cloud", deepgram_live: "Deepgram live"};
+
+function pick(el) {
+  document.querySelectorAll(".choice").forEach(c => c.classList.remove("sel"));
+  el.classList.add("sel");
+  engine = el.dataset.engine;
+  $("kf-dg").style.display = engine === "deepgram_live" ? "block" : "none";
+}
+
+function render() {
+  document.querySelectorAll(".step").forEach((s, i) => s.classList.toggle("on", i === step));
+  document.querySelectorAll("#dots i").forEach((d, i) => d.classList.toggle("on", i <= step));
+  $("step-label").textContent = `Setup · ${step + 1} of ${N}`;
+  $("btn-back").style.display = step > 0 && step < N - 1 ? "block" : "none";
+  $("btn-next").textContent = step === 0 ? "Get started" : (step === N - 1 ? "Start using Koovu" : "Next");
+  // account step gates the flow: no Next until signed in
+  $("btn-next").style.display = (step === ACCT && !signedIn) ? "none" : "block";
+  if (step === N - 1) {
+    $("sum-engine").textContent = ENGINE_NAMES[engine];
+    $("sum-groq").textContent =
+      ($("ob-groq").value.trim() || STATE.config.groq_api_key_set) ? "connected" : "off (add key later)";
+  }
+}
+
+async function go(dir) {
+  if (step === N - 1 && dir > 0) return finish();
+  if (step === ACCT && dir > 0 && !signedIn) return;   // hard gate
+  if (step === ENGINE_STEP && dir > 0) await saveChoices();
+  step = Math.max(0, Math.min(N - 1, step + dir));
+  render();
+}
+
+// ------------------------------------------------------------- account ----
+
+function acctToggleMode() {
+  acctMode = acctMode === "signup" ? "signin" : "signup";
+  $("ac-submit").textContent = acctMode === "signup" ? "Create account" : "Sign in";
+  $("ac-mode").textContent = acctMode === "signup"
+    ? "Already have an account? Sign in"
+    : "New here? Create an account";
+  const signup = acctMode === "signup";
+  $("ac-first").style.display = signup ? "block" : "none";
+  $("ac-last").style.display = signup ? "block" : "none";
+  $("ac-phone").style.display = signup ? "block" : "none";
+  $("ac-err").textContent = "";
+}
+
+function acctBackToForm() {
+  $("acct-confirm").style.display = "none";
+  $("acct-form").style.display = "block";
+  $("ac-err").textContent = "";
+}
+
+function acctSignedIn(email) {
+  signedIn = true;
+  $("acct-form").style.display = "none";
+  $("acct-confirm").style.display = "none";
+  $("acct-done").style.display = "block";
+  $("ac-who").textContent = email;
+  $("ac-err").textContent = "";
+  render();
+}
+
+async function acctSubmit() {
+  const email = $("ac-email").value.trim();
+  const pass = $("ac-pass").value;
+  $("ac-err").textContent = "";
+  if (!email || !email.includes("@")) { $("ac-err").textContent = "Enter a valid email."; return; }
+  if (pass.length < 6) { $("ac-err").textContent = "Password must be at least 6 characters."; return; }
+  if (acctMode === "signup" && !$("ac-first").value.trim()) {
+    $("ac-err").textContent = "Enter your first name."; return;
+  }
+  $("ac-submit").disabled = true;
+  $("ac-submit").textContent = "…";
+  try {
+    const url = acctMode === "signup" ? "/account/signup" : "/account/signin";
+    const body = {email, password: pass};
+    if (acctMode === "signup") {
+      body.first_name = $("ac-first").value.trim();
+      body.last_name = $("ac-last").value.trim();
+      body.phone = $("ac-phone").value.trim();
+    }
+    const r = await fetch(url, {method: "POST", body: JSON.stringify(body)});
+    const res = await r.json();
+    if (res.ok && res.needs_confirmation) {
+      pendingEmail = email; pendingPass = pass;
+      $("ac-sent-to").textContent = email;
+      $("acct-form").style.display = "none";
+      $("acct-confirm").style.display = "block";
+    } else if (res.ok) {
+      acctSignedIn(email);
+    } else {
+      $("ac-err").textContent = res.error || "Something went wrong. Try again.";
+    }
+  } catch (e) {
+    $("ac-err").textContent = "Network error — check your connection.";
+  }
+  $("ac-submit").disabled = false;
+  $("ac-submit").textContent = acctMode === "signup" ? "Create account" : "Sign in";
+}
+
+async function acctVerify() {
+  $("ac-err").textContent = "";
+  try {
+    const r = await fetch("/account/signin", {method: "POST",
+      body: JSON.stringify({email: pendingEmail, password: pendingPass})});
+    const res = await r.json();
+    if (res.ok) return acctSignedIn(pendingEmail);
+    $("ac-err").textContent = "Not confirmed yet — click the link in your email first.";
+  } catch (e) {
+    $("ac-err").textContent = "Network error — check your connection.";
+  }
+}
+
+async function acctCheckExisting() {
+  try {
+    const r = await fetch("/account/status");
+    const res = await r.json();
+    if (res.signed_in) acctSignedIn(res.email || "your account");
+  } catch (e) {}
+}
+acctCheckExisting();
+
+async function saveChoices() {
+  const body = {engine};
+  const g = $("ob-groq").value.trim();
+  if (g) body.groq_api_key = g;
+  const d = $("ob-dg").value.trim();
+  if (d) body.deepgram_api_key = d;
+  try { await fetch("/save", {method: "POST", body: JSON.stringify(body)}); } catch (e) {}
+}
+
+function openPane(p) {
+  fetch("/open-pane", {method: "POST", body: JSON.stringify({pane: p})});
+}
+
+function requestMic() {
+  fetch("/permissions/request", {method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({which: "microphone"})});
+}
+
+async function finish() {
+  await saveChoices();
+  try { await fetch("/onboarding-complete", {method: "POST"}); } catch (e) {}
+}
+
+render();
+</script>
+</body>
+</html>

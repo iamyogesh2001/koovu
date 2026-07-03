@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Koovu — Account</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg:#0a0a0a; --panel:#111111; --border:#262626; --border2:#333333;
+    --text:#fafafa; --muted:#8f8f8f; --faint:#525252;
+    --hatch:repeating-linear-gradient(45deg,#1c1c1c 0 5px,transparent 5px 11px);
+    --mono:"SF Mono", ui-monospace, Menlo, monospace;
+    --sans:-apple-system, "Inter", sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);
+       min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .box{width:380px;background:var(--panel);border:1px solid var(--border2);
+       border-radius:12px;overflow:hidden}
+  .hatchband{height:8px;background:var(--hatch);border-bottom:1px solid var(--border)}
+  .inner{padding:26px}
+  .logo{display:flex;align-items:flex-end;gap:2.5px;height:18px;margin-bottom:18px}
+  .logo i{width:4px;background:var(--text);border-radius:2px;display:block}
+  .logo i:nth-child(1){height:10px}.logo i:nth-child(2){height:17px}.logo i:nth-child(3){height:13px}
+  h1{font-size:18px;font-weight:650;margin-bottom:8px}
+  p{color:var(--muted);font-size:12.5px;line-height:1.65;margin-bottom:16px}
+  label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);
+        letter-spacing:1px;text-transform:uppercase;margin:12px 0 6px}
+  input{background:#0d0d0d;border:1px solid var(--border);border-radius:7px;width:100%;
+    color:var(--text);font-family:var(--mono);font-size:12px;padding:10px 12px;outline:none}
+  input:focus{border-color:#666}
+  button{width:100%;margin-top:16px;padding:11px;border:0;border-radius:8px;
+    background:var(--text);color:#0a0a0a;font-weight:600;font-size:13px;cursor:pointer}
+  button:hover{background:#d4d4d4}
+  .msg{font-family:var(--mono);font-size:11px;margin-top:12px;min-height:14px;color:var(--muted)}
+  .big-ok{font-size:40px;text-align:center;margin:8px 0 12px}
+  .center{text-align:center}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="hatchband"></div>
+  <div class="inner">
+    <div class="logo"><i></i><i></i><i></i></div>
+
+    <div id="v-loading">
+      <h1>One moment…</h1>
+      <p>Checking your link.</p>
+    </div>
+
+    <div id="v-confirmed" style="display:none">
+      <div class="big-ok">✓</div>
+      <h1 class="center">Email confirmed</h1>
+      <p class="center">Your Koovu account is ready. Go back to the app and sign in.</p>
+    </div>
+
+    <div id="v-reset" style="display:none">
+      <h1>Set a new password</h1>
+      <p>Heads up: for security, API keys synced under your old password can't
+         be recovered — you'll re-enter them once. Settings and dictionary are safe.</p>
+      <label>New password</label>
+      <input type="password" id="pw1" placeholder="min 8 characters">
+      <label>Repeat it</label>
+      <input type="password" id="pw2">
+      <button onclick="doReset()">Save new password</button>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <div id="v-error" style="display:none">
+      <h1>Link problem</h1>
+      <p id="err-text">This link is invalid or expired. Request a new one from the Koovu app.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.hash.slice(1));
+const type = params.get("type");
+const accessToken = params.get("access_token");
+const refreshToken = params.get("refresh_token") || "";
+const errDesc = new URLSearchParams(location.search).get("error_description")
+             || params.get("error_description");
+
+function show(id) {
+  ["v-loading","v-confirmed","v-reset","v-error"].forEach(v =>
+    $(v).style.display = v === id ? "block" : "none");
+}
+
+if (errDesc) {
+  $("err-text").textContent = decodeURIComponent(errDesc.replace(/\+/g, " "));
+  show("v-error");
+} else if (type === "recovery" && accessToken) {
+  show("v-reset");
+} else if (accessToken || type === "signup") {
+  show("v-confirmed");
+} else {
+  show("v-error");
+}
+
+async function doReset() {
+  const p1 = $("pw1").value, p2 = $("pw2").value;
+  if (p1.length < 8) { $("msg").textContent = "Password must be at least 8 characters."; return; }
+  if (p1 !== p2) { $("msg").textContent = "Passwords don't match."; return; }
+  $("msg").textContent = "Saving…";
+  try {
+    const r = await fetch("/account/set-password", {method: "POST",
+      body: JSON.stringify({access_token: accessToken, refresh_token: refreshToken, password: p1})});
+    const d = await r.json();
+    if (d.ok) {
+      $("v-reset").innerHTML = '<div class="big-ok">✓</div><h1 class="center">Password updated</h1>' +
+        '<p class="center">You are signed in on this Mac. You can close this tab.</p>';
+    } else {
+      $("msg").textContent = d.error || "Something went wrong.";
+    }
+  } catch (e) {
+    $("msg").textContent = "Is Koovu running? Open the app and try again.";
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+numpy
+sounddevice
+requests
+rumps
+websocket-client
+pyobjc-framework-WebKit
+pyobjc-framework-AVFoundation
+mlx-whisper; platform_machine == "arm64"
+cryptography

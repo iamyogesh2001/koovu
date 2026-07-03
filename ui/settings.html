@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Koovu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg:#0a0a0a; --panel:#111111; --panel2:#161616; --border:#262626;
+    --border2:#333333; --text:#fafafa; --muted:#8f8f8f; --faint:#525252;
+    --hatch:repeating-linear-gradient(45deg,#1c1c1c 0 5px,transparent 5px 11px);
+    --mono:"SF Mono", ui-monospace, Menlo, monospace;
+    --sans:-apple-system, "Inter", sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);
+       font-size:13px;display:flex;flex-direction:column;overflow:hidden}
+
+  /* ---------- header ---------- */
+  header{display:flex;align-items:center;gap:9px;padding:14px 18px 10px}
+  .logo{display:flex;align-items:flex-end;gap:2.5px;height:18px}
+  .logo i{width:4px;background:var(--text);border-radius:2px;display:block}
+  .logo i:nth-child(1){height:10px}.logo i:nth-child(2){height:17px}.logo i:nth-child(3){height:13px}
+  header h1{font-size:15px;font-weight:650;letter-spacing:.3px}
+  .live{margin-left:auto;font-family:var(--mono);font-size:10px;
+        color:var(--muted);display:flex;align-items:center;gap:5px}
+  .live b{width:6px;height:6px;border-radius:50%;background:var(--text);
+          animation:pulse 2s infinite}
+  @keyframes pulse{50%{opacity:.25}}
+  .hatchband{height:8px;background:var(--hatch);border-top:1px solid var(--border);
+             border-bottom:1px solid var(--border);margin:0 0 12px}
+
+  /* ---------- tabs ---------- */
+  nav{display:flex;gap:2px;padding:0 18px 12px}
+  nav button{flex:1;background:none;border:1px solid transparent;color:var(--muted);
+    font-family:var(--mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;
+    padding:7px 0;border-radius:6px;cursor:pointer}
+  nav button.on{background:var(--panel2);color:var(--text);border-color:var(--border2)}
+  nav button:hover{color:var(--text)}
+
+  main{flex:1;overflow-y:auto;padding:0 18px 18px}
+  .tab{display:none}.tab.on{display:block}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+        padding:15px;margin-bottom:12px;position:relative}
+  .card h2{font-family:var(--mono);font-size:10px;letter-spacing:1.6px;
+           color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+
+  /* ---------- home hero ---------- */
+  .hero{border-color:var(--border2);text-align:center;padding:22px 15px 18px}
+  .corner{position:absolute;width:9px;height:9px;border:1.5px solid var(--text)}
+  .corner.tl{top:-1px;left:-1px;border-right:0;border-bottom:0;border-radius:3px 0 0 0}
+  .corner.tr{top:-1px;right:-1px;border-left:0;border-bottom:0;border-radius:0 3px 0 0}
+  .corner.bl{bottom:-1px;left:-1px;border-right:0;border-top:0;border-radius:0 0 0 3px}
+  .corner.br{bottom:-1px;right:-1px;border-left:0;border-top:0;border-radius:0 0 3px 0}
+  .wave{display:flex;justify-content:center;align-items:flex-end;gap:5px;height:44px;margin-bottom:14px}
+  .wave i{width:7px;background:var(--text);border-radius:4px;display:block;
+          animation:bar 1.6s ease-in-out infinite}
+  .wave i:nth-child(1){animation-delay:0s}.wave i:nth-child(2){animation-delay:.22s}
+  .wave i:nth-child(3){animation-delay:.44s}.wave i:nth-child(4){animation-delay:.1s}
+  .wave i:nth-child(5){animation-delay:.33s}
+  @keyframes bar{0%,100%{height:12px;opacity:.35}50%{height:42px;opacity:1}}
+  @media (prefers-reduced-motion){.wave i{animation:none;height:26px}.live b{animation:none}}
+  .big{font-family:var(--mono);font-size:38px;font-weight:600;line-height:1}
+  .big small{font-size:12px;color:var(--muted);font-weight:400;display:block;margin-top:6px;
+             letter-spacing:1.2px;text-transform:uppercase}
+  .statrow{display:flex;gap:12px;margin-top:16px}
+  .stat{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 6px}
+  .stat b{font-family:var(--mono);font-size:17px;font-weight:600;display:block}
+  .stat span{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+  .hint{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-align:center;margin-top:2px}
+  .hint kbd{background:var(--panel2);border:1px solid var(--border2);border-radius:4px;
+            padding:2px 6px;color:var(--text)}
+
+  /* ---------- history ---------- */
+  .hist .item{border-left:2px solid var(--border2);padding:7px 10px;margin-bottom:8px;
+    background:var(--panel2);border-radius:0 7px 7px 0;cursor:pointer;transition:all .12s}
+  .hist .item:hover{background:#1c1c1c;border-left-color:var(--text)}
+  .hist .txt{font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;
+             -webkit-box-orient:vertical;overflow:hidden}
+  .hist .ts{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-top:3px}
+  .empty{color:var(--faint);font-family:var(--mono);font-size:11px;text-align:center;padding:14px 0}
+
+  /* ---------- dictionary ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+  .chip{background:var(--panel2);border:1px solid var(--border2);color:var(--text);
+        font-family:var(--mono);font-size:11px;border-radius:20px;padding:4px 10px;
+        display:flex;align-items:center;gap:6px}
+  .chip u{cursor:pointer;text-decoration:none;color:var(--muted);font-size:12px}
+  .chip u:hover{color:#fff}
+  .addrow{display:flex;gap:8px}
+  .addrow input{flex:1}
+  .pair{display:flex;align-items:center;gap:8px;background:var(--panel2);
+        border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-bottom:7px;
+        font-family:var(--mono);font-size:11.5px}
+  .pair .h{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--faint)}
+  .pair .arrow{color:var(--faint)}
+  .pair .m{color:var(--text)}
+  .pair u{margin-left:auto;cursor:pointer;color:var(--muted);text-decoration:none}
+  .pair u:hover{color:#fff}
+  .pairform{display:flex;gap:8px;margin-top:10px}
+  .pairform input{flex:1}
+
+  /* ---------- forms ---------- */
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+  .row:last-child{margin-bottom:0}
+  .row label{font-size:12.5px}
+  .row .sub{display:block;color:var(--faint);font-size:10.5px;margin-top:2px}
+  input,select,textarea{background:#0d0d0d;border:1px solid var(--border);border-radius:7px;
+    color:var(--text);font-family:var(--mono);font-size:11.5px;padding:8px 10px;outline:none;width:190px}
+  input:focus,select:focus,textarea:focus{border-color:#666666}
+  input[type=checkbox]{width:auto;accent-color:#e5e5e5;transform:scale(1.15)}
+  button.primary{width:100%;padding:11px;border:0;border-radius:8px;background:var(--text);
+    color:#0a0a0a;font-weight:600;font-size:13px;cursor:pointer;font-family:var(--sans)}
+  button.primary:hover{background:#d4d4d4}
+  button.small{background:var(--panel2);border:1px solid var(--border2);color:var(--text);
+    border-radius:7px;padding:8px 14px;font-family:var(--mono);font-size:11px;cursor:pointer}
+  button.small:hover{border-color:#666666}
+  .seg{display:flex;gap:4px;background:#0d0d0d;border:1px solid var(--border);border-radius:8px;padding:3px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--muted);font-family:var(--mono);
+    font-size:10.5px;padding:6px 8px;border-radius:6px;cursor:pointer;letter-spacing:.3px}
+  .seg button.on{background:#222222;color:var(--text);border:1px solid var(--border2)}
+  .seg button:hover{color:var(--text)}
+  .ghostlink{background:none;border:0;color:var(--faint);font-size:11px;cursor:pointer;
+    font-family:var(--mono);text-decoration:underline;text-underline-offset:3px}
+  .ghostlink:hover{color:var(--muted)}
+  .danger{width:100%;padding:10px;border:1px solid var(--border2);border-radius:8px;background:transparent;
+    color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;margin-top:8px}
+  .danger:hover{border-color:#666666;color:var(--text)}
+  #saved{text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--text);height:15px;margin-top:8px}
+  .badge{font-family:var(--mono);font-size:9.5px;letter-spacing:1px;padding:3px 8px;border-radius:4px}
+  .badge.ok{background:#1c1c1c;color:var(--text);border:1px solid var(--border2)}
+  .badge.warn{background:transparent;color:var(--faint);border:1px solid var(--border)}
+  .badge.bad{background:transparent;color:#f87171;border:1px solid #7f1d1d}
+
+  /* permission rows */
+  .perm{display:flex;align-items:flex-start;gap:12px;padding:12px 0;
+        border-bottom:1px solid var(--border)}
+  .perm:last-child{border:0;padding-bottom:0}
+  .perm:first-child{padding-top:0}
+  .perm .info{flex:1;min-width:0}
+  .perm h3{font-size:13px;font-weight:600;margin-bottom:3px;color:var(--text);
+           font-family:var(--sans);letter-spacing:0;text-transform:none}
+  .perm p{color:var(--muted);font-size:11.5px;line-height:1.55}
+  .perm .actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .perm button.small{white-space:nowrap}
+
+  /* ---------- about ---------- */
+  .about p{color:var(--muted);line-height:1.65;font-size:12.5px;margin-bottom:10px}
+  .kv{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;
+      padding:7px 0;border-bottom:1px solid var(--border);color:var(--muted)}
+  .kv:last-child{border:0}
+  .kv b{color:var(--text);font-weight:500}
+  footer{font-family:var(--mono);font-size:9.5px;color:var(--faint);text-align:center;padding:8px 0 12px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><i></i><i></i><i></i></div>
+  <h1>koovu</h1>
+  <div class="live"><b></b>LISTENING</div>
+</header>
+<div class="hatchband"></div>
+
+<nav>
+  <button class="on" data-tab="home">Home</button>
+  <button data-tab="dict">Dictionary</button>
+  <button data-tab="settings">Settings</button>
+  <button data-tab="about">About</button>
+</nav>
+
+<main>
+
+<!-- ================= HOME ================= -->
+<section class="tab on" id="tab-home">
+  <div class="card hero">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="wave"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="big"><span id="s-today">0</span><small>words spoken today</small></div>
+    <div class="statrow">
+      <div class="stat"><b id="s-streak">0</b><span>day streak</span></div>
+      <div class="stat"><b id="s-sessions">0</b><span>dictations</span></div>
+      <div class="stat"><b id="s-total">0</b><span>total words</span></div>
+    </div>
+  </div>
+  <p class="hint" id="hotkey-hint">tap <kbd>left ctrl</kbd> in any text field · talk · tap again</p>
+  <div class="card">
+    <h2>Recent</h2>
+    <div class="hist" id="hist"><div class="empty">Nothing yet — tap your hotkey and say something.</div></div>
+  </div>
+  <p class="hint" style="margin-top:14px">
+    Made with ♥ by
+    <a href="#" onclick="openUrl('https://github.com/iamyogesh2001');return false"
+       style="color:inherit;text-decoration:underline">Yogesh</a>
+  </p>
+</section>
+
+<!-- ================= DICTIONARY ================= -->
+<section class="tab" id="tab-dict">
+  <div class="card">
+    <h2>Your words</h2>
+    <div class="chips" id="chips"></div>
+    <div class="addrow">
+      <input id="d-word" placeholder="name, jargon, brand…">
+      <button class="small" onclick="addWord()">Add</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Corrections — teach Koovu</h2>
+    <div id="pairs"><div class="empty">When Koovu mishears a word, teach it here. Applied to every future dictation.</div></div>
+    <div class="pairform">
+      <input id="d-heard" placeholder="Koovu heard…">
+      <input id="d-meant" placeholder="you meant…">
+      <button class="small" onclick="addPair()">Teach</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SETTINGS ================= -->
+<section class="tab" id="tab-settings">
+  <div class="card" id="perms-card">
+    <h2>Permissions</h2>
+    <p style="color:var(--muted);font-size:11.5px;line-height:1.55;margin:-4px 0 12px">
+      Enable <b id="perm-host" style="color:var(--text)">Koovu</b> in each list below.
+      If Koovu isn't visible yet, tap <b style="color:var(--text)">Request access</b> first —
+      macOS only lists apps after they ask.
+    </p>
+    <div class="perm">
+      <div class="info">
+        <h3>Microphone</h3>
+        <p>Hear your voice for dictation.</p>
+      </div>
+      <div class="actions">
+        <span class="badge warn" id="b-perm-mic">CHECKING…</span>
+        <button class="small" onclick="requestMic()">Request access</button>
+        <button class="small" onclick="openPane('mic')">Open Settings</button>
+      </div>
+    </div>
+    <div class="perm">
+      <div class="info">
+        <h3>Accessibility</h3>
+        <p>Insert transcribed text into any app (Cursor, Notes, etc.).</p>
+      </div>
+      <div class="actions">
+        <span class="badge warn" id="b-perm-ax">CHECKING…</span>
+        <button class="small" onclick="requestAx()">Request access</button>
+        <button class="small" onclick="openPane('ax')">Open Settings</button>
+      </div>
+    </div>
+    <div class="perm">
+      <div class="info">
+        <h3>Hotkey</h3>
+        <p>Catch Left Ctrl globally. Uses Accessibility — same permission as text insert.</p>
+      </div>
+      <div class="actions">
+        <span class="badge warn" id="b-perm-hotkey">CHECKING…</span>
+        <button class="small" onclick="requestAx()">Request access</button>
+        <button class="small" onclick="openPane('ax')">Open Settings</button>
+      </div>
+    </div>
+    <div class="perm">
+      <div class="info">
+        <h3>Input monitoring</h3>
+        <p>Optional on recent macOS. Add Koovu here only if the hotkey still fails.</p>
+      </div>
+      <div class="actions">
+        <span class="badge warn" id="b-perm-input">MANUAL</span>
+        <button class="small" onclick="openPane('input')">Open Settings</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="small" onclick="refreshPerms()">Refresh status</button>
+      <button class="small" onclick="resetMic()">Reset microphone permission</button>
+      <span id="perm-hint" style="font-family:var(--mono);font-size:10px;color:var(--faint)"></span>
+    </div>
+  </div>
+  <div class="card" id="account-card">
+    <h2>Account · sync across Macs</h2>
+    <div id="acct-out">
+      <div class="row"><input type="email" id="a-email" placeholder="email" style="width:100%"></div>
+      <div class="row"><input type="password" id="a-pass" placeholder="password (min 8 chars)" style="width:100%"></div>
+      <div class="row" style="gap:8px">
+        <button class="small" style="flex:1" onclick="acctSignIn()">Sign in</button>
+        <button class="small" style="flex:1" onclick="acctSignUp()">Create account</button>
+      </div>
+      <div class="row" style="justify-content:center;margin-top:2px">
+        <button class="ghostlink" onclick="acctForgot()">Forgot password?</button>
+      </div>
+    </div>
+    <div id="acct-in" style="display:none">
+      <div class="row"><label id="a-who">—</label>
+        <span class="badge ok">SYNCED</span></div>
+      <div class="row" style="gap:8px">
+        <button class="small" style="flex:1" onclick="acctSync()">Sync now</button>
+        <button class="small" style="flex:1" onclick="acctSignOut()">Sign out</button>
+      </div>
+    </div>
+    <div id="acct-msg" style="font-family:var(--mono);font-size:10.5px;color:var(--muted);
+         min-height:14px;margin-top:6px;text-align:center"></div>
+  </div>
+  <div class="card">
+    <h2>Engine</h2>
+    <div class="row"><label>Engine<span class="sub" id="engine-sub">Live types words as you speak</span></label>
+      <select id="f-engine">
+        <option value="local_batch">On-device (private, no key)</option>
+        <option value="groq_batch">Batch (Groq Whisper)</option>
+        <option value="deepgram_live">Live (Deepgram)</option>
+      </select></div>
+    <div class="row" id="local-status-row" style="display:none">
+      <label>Local model<span class="sub">whisper-large-v3-turbo · runs on your Mac</span></label>
+      <span class="badge warn" id="b-local">NOT READY</span></div>
+  </div>
+  <div class="card">
+    <h2>Connection</h2>
+    <div class="row"><label>Groq API key<span class="sub">console.groq.com/keys — free · cleanup brain</span></label>
+      <span class="badge warn" id="b-key">MISSING</span></div>
+    <div class="row"><input type="password" id="f-key" placeholder="gsk_…" style="width:100%"></div>
+    <div class="row"><label>Deepgram API key<span class="sub">console.deepgram.com — $200 free · live ears</span></label>
+      <span class="badge warn" id="b-dg">MISSING</span></div>
+    <div class="row"><input type="password" id="f-dgkey" placeholder="deepgram key…" style="width:100%"></div>
+  </div>
+  <div class="card">
+    <h2>Control</h2>
+    <div class="row"><label>Hotkey</label>
+      <select id="f-hotkey">
+        <option value="left_ctrl">Left Ctrl</option><option value="right_ctrl">Right Ctrl</option>
+        <option value="right_alt">Right Option</option><option value="right_cmd">Right Cmd</option>
+        <option value="f8">F8</option><option value="f9">F9</option>
+      </select></div>
+    <div class="row"><label>Mode</label>
+      <select id="f-mode">
+        <option value="toggle">Tap to start / stop</option>
+        <option value="hold">Hold to talk</option>
+      </select></div>
+    <div class="row"><label>Max seconds<span class="sub">per dictation · up to 480</span></label>
+      <input type="number" id="f-max" min="10" max="480"></div>
+    <div class="row"><label>Sounds</label><input type="checkbox" id="f-sounds"></div>
+  </div>
+  <div class="card">
+    <h2>Output</h2>
+    <div class="row"><label>Style<span class="sub">Tanglish keeps Tamil in English letters</span></label>
+      <select id="f-style"><option value="auto">Auto</option><option value="tanglish">Tanglish</option></select></div>
+    <div class="row"><label>AI cleanup<span class="sub">punctuation, fillers, formatting</span></label>
+      <input type="checkbox" id="f-cleanup"></div>
+    <div class="row" id="cleanup-level-row"><label>Cleanup intensity<span class="sub">Light keeps your natural voice</span></label>
+      <div class="seg" id="f-cleanup-level">
+        <button type="button" data-level="light" class="on">Light</button>
+        <button type="button" data-level="medium">Medium</button>
+        <button type="button" data-level="heavy">Heavy</button>
+      </div></div>
+  </div>
+  <button class="primary" onclick="save()">Save changes</button>
+  <div id="saved"></div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section class="tab" id="tab-about">
+  <div class="card about">
+    <h2>Koovu</h2>
+    <p>Voice → polished text, everywhere on your Mac. Built for accents the big tools ignore — Indian English, Tamil, Tanglish. Private by default: the on-device engine never sends your audio anywhere.</p>
+    <div class="kv"><span>Version</span><b id="ver">—</b></div>
+    <div class="kv"><span>Engines</span><b>On-device · Groq · Deepgram</b></div>
+    <div class="kv"><span>Cleanup</span><b>Llama 3.3 70B · adjustable</b></div>
+    <div class="kv"><span>Config</span><b>~/.koovu/</b></div>
+    <button class="danger" onclick="quitApp()">Quit Koovu</button>
+  </div>
+  <div class="card about">
+    <h2>Coming next</h2>
+    <p>Local live streaming · accounts &amp; sync · Hindi &amp; more languages · iPhone.</p>
+  </div>
+</section>
+
+</main>
+<div class="hatchband" style="margin:0"></div>
+<footer>koovu · your voice, your words</footer>
+
+<script>
+const STATE = __KOOVU_STATE__;
+const $ = id => document.getElementById(id);
+let vocab = [...(STATE.config.custom_vocabulary || [])];
+let pairs = [...(STATE.config.corrections || [])];
+let cleanupLevel = STATE.config.cleanup_level || "light";
+
+/* tabs */
+document.querySelectorAll("nav button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll("nav button").forEach(x => x.classList.remove("on"));
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    $("tab-" + b.dataset.tab).classList.add("on");
+  };
+});
+
+function fmt(n){ return n >= 10000 ? (n/1000).toFixed(1)+"k" : n; }
+
+function openUrl(u) {
+  fetch("/open-url", {method: "POST", body: JSON.stringify({url: u})});
+}
+
+function openPane(p) {
+  fetch("/open-pane", {method: "POST", body: JSON.stringify({pane: p})});
+}
+
+async function requestAx() {
+  $("perm-hint").textContent = "Requesting accessibility…";
+  await fetch("/permissions/request",
+    {method: "POST", headers: {"Content-Type": "application/json"},
+     body: JSON.stringify({which: "accessibility"})});
+  setTimeout(refreshPerms, 1500);
+}
+
+async function requestPerms() {
+  requestAx();
+}
+
+async function requestMic() {
+  $("perm-hint").textContent = "Requesting microphone…";
+  await fetch("/permissions/request",
+    {method: "POST", headers: {"Content-Type": "application/json"},
+     body: JSON.stringify({which: "microphone"})});
+  $("perm-hint").textContent = "Follow the on-screen prompts.";
+  setTimeout(refreshPerms, 2500);
+}
+
+async function resetMic() {
+  $("perm-hint").textContent = "Resetting — Koovu will restart…";
+  await fetch("/permissions/request",
+    {method: "POST", headers: {"Content-Type": "application/json"},
+     body: JSON.stringify({which: "reset-microphone"})});
+}
+
+async function refreshPerms() {
+  try {
+    const r = await fetch("/permissions/status");
+    if (!r.ok) throw new Error("status " + r.status);
+    const d = await r.json();
+    const host = d.host_app || "Koovu";
+    $("perm-host").textContent = host;
+    const ax = $("b-perm-ax");
+    if (d.accessibility) {
+      ax.textContent = "ON"; ax.className = "badge ok";
+    } else {
+      ax.textContent = "OFF"; ax.className = "badge bad";
+    }
+    const mic = $("b-perm-mic");
+    if (d.microphone) {
+      mic.textContent = "ON"; mic.className = "badge ok";
+    } else if (d.microphone_status === 0) {
+      mic.textContent = "ASK"; mic.className = "badge warn";
+    } else {
+      mic.textContent = "OFF"; mic.className = "badge bad";
+    }
+    const hk = $("b-perm-hotkey");
+    if (d.hotkey) {
+      hk.textContent = "ON"; hk.className = "badge ok";
+    } else if (d.accessibility) {
+      hk.textContent = "RETRY"; hk.className = "badge warn";
+    } else {
+      hk.textContent = "OFF"; hk.className = "badge bad";
+    }
+    $("b-perm-input").textContent = "MANUAL"; $("b-perm-input").className = "badge warn";
+    if (d.accessibility && d.microphone && d.hotkey) {
+      $("perm-hint").textContent = "All set — quit and reopen Koovu if you just changed anything.";
+    } else if (!d.accessibility) {
+      $("perm-hint").textContent =
+        "Updated Koovu? Remove old Koovu from Accessibility, tap Request access, quit & reopen.";
+    } else if (!d.microphone && d.microphone_status === 2) {
+      $("perm-hint").textContent =
+        "Koovu missing from Mic list? Tap Reset microphone permission → quit → reopen → Request access.";
+    } else if (!d.microphone) {
+      $("perm-hint").textContent = "Tap Request access for Microphone, allow the dialog, then Open Settings.";
+    } else if (!d.hotkey) {
+      $("perm-hint").textContent = "Accessibility is ON — quit Koovu fully and reopen from Applications.";
+    } else {
+      $("perm-hint").textContent = "Enable the OFF items for " + host + ", then quit and reopen Koovu.";
+    }
+  } catch (e) {
+    $("perm-hint").textContent = "Could not check permissions.";
+  }
+}
+
+function init() {
+  const c = STATE.config, s = STATE.stats || {};
+  $("ver").textContent = "v" + STATE.version;
+  $("s-today").textContent = fmt(s.today_words || 0);
+  $("s-streak").textContent = s.streak || 0;
+  $("s-sessions").textContent = fmt(s.total_sessions || 0);
+  $("s-total").textContent = fmt(s.total_words || 0);
+  const verb = c.mode === "hold" ? "hold" : "tap";
+  $("hotkey-hint").innerHTML =
+    `${verb} <kbd>${c.hotkey.replace("_"," ")}</kbd> in any text field · talk · ${verb === "tap" ? "tap again" : "release"}`;
+  $("f-hotkey").value = c.hotkey; $("f-mode").value = c.mode;
+  $("f-max").value = c.max_seconds; $("f-style").value = c.output_style || "auto";
+  $("f-cleanup").checked = !!c.cleanup; $("f-sounds").checked = !!c.sounds;
+  setCleanupLevel(c.cleanup_level || "light");
+  toggleCleanupLevelRow();
+  $("f-cleanup").onchange = toggleCleanupLevelRow;
+  if (c.groq_api_key_set) {
+    const b = $("b-key"); b.textContent = "CONNECTED"; b.className = "badge ok";
+    $("f-key").placeholder = "•••••••••••• (saved)";
+  }
+  if (c.deepgram_key_set) {
+    const b = $("b-dg"); b.textContent = "CONNECTED"; b.className = "badge ok";
+    $("f-dgkey").placeholder = "•••••••••••• (saved)";
+  }
+  $("f-engine").value = c.engine || "groq_batch";
+  $("f-engine").onchange = updateEngineUI;
+  updateEngineUI();
+  renderHist(STATE.history || []); renderChips(); renderPairs();
+}
+
+const ENGINE_SUBS = {
+  local_batch: "Free forever · audio never leaves your Mac",
+  groq_batch: "Cloud batch · needs Groq key",
+  deepgram_live: "Types words as you speak · needs Deepgram key",
+};
+
+function updateEngineUI() {
+  const eng = $("f-engine").value;
+  $("engine-sub").textContent = ENGINE_SUBS[eng] || "";
+  $("local-status-row").style.display = eng === "local_batch" ? "flex" : "none";
+  if (eng === "local_batch") refreshLocalBadge();
+}
+
+function setLocalBadge(state, available) {
+  const b = $("b-local");
+  if (!available) { b.textContent = "NOT INSTALLED"; b.className = "badge warn"; return; }
+  if (state === "ready") { b.textContent = "READY"; b.className = "badge ok"; }
+  else if (state === "downloading") { b.textContent = "DOWNLOADING…"; b.className = "badge warn"; }
+  else if (state === "error") { b.textContent = "ERROR"; b.className = "badge warn"; }
+  else { b.textContent = "WARMING UP…"; b.className = "badge warn"; }
+}
+
+let localPoll = null;
+function refreshLocalBadge() {
+  const la = STATE.local_asr || {};
+  setLocalBadge(la.state, la.available);
+  if (localPoll) clearInterval(localPoll);
+  localPoll = setInterval(async () => {
+    try {
+      const r = await fetch("/state");
+      const s = await r.json();
+      const la = s.local_asr || {};
+      setLocalBadge(la.state, la.available);
+      if (la.state === "ready" || la.state === "error") clearInterval(localPoll);
+    } catch (e) { clearInterval(localPoll); }
+  }, 3000);
+}
+
+function renderHist(h) {
+  if (!h.length) return;
+  const el = $("hist"); el.innerHTML = "";
+  h.slice(0, 10).forEach(item => {
+    const d = document.createElement("div");
+    d.className = "item";
+    d.innerHTML = `<div class="txt"></div><div class="ts">${item.ts} · click to copy</div>`;
+    d.querySelector(".txt").textContent = item.text;
+    d.onclick = () => navigator.clipboard.writeText(item.text);
+    el.appendChild(d);
+  });
+}
+
+/* dictionary */
+function renderChips() {
+  const el = $("chips"); el.innerHTML = "";
+  if (!vocab.length) { el.innerHTML = '<div class="empty" style="width:100%">Add names and jargon Koovu should always get right.</div>'; return; }
+  vocab.forEach((w, i) => {
+    const c = document.createElement("div"); c.className = "chip";
+    const t = document.createElement("span"); t.textContent = w;
+    const x = document.createElement("u"); x.textContent = "×";
+    x.onclick = () => { vocab.splice(i, 1); renderChips(); persistDict(); };
+    c.append(t, x); el.appendChild(c);
+  });
+}
+function addWord() {
+  const w = $("d-word").value.trim();
+  if (!w || vocab.includes(w)) return;
+  vocab.push(w); $("d-word").value = ""; renderChips(); persistDict();
+}
+function renderPairs() {
+  const el = $("pairs");
+  if (!pairs.length) return;
+  el.innerHTML = "";
+  pairs.forEach((p, i) => {
+    const d = document.createElement("div"); d.className = "pair";
+    const h = document.createElement("span"); h.className = "h"; h.textContent = p.heard;
+    const a = document.createElement("span"); a.className = "arrow"; a.textContent = "→";
+    const m = document.createElement("span"); m.className = "m"; m.textContent = p.meant;
+    const x = document.createElement("u"); x.textContent = "×";
+    x.onclick = () => { pairs.splice(i, 1); renderPairs(); persistDict(); };
+    d.append(h, a, m, x); el.appendChild(d);
+  });
+}
+function addPair() {
+  const heard = $("d-heard").value.trim(), meant = $("d-meant").value.trim();
+  if (!heard || !meant) return;
+  pairs.push({heard, meant});
+  $("d-heard").value = ""; $("d-meant").value = "";
+  renderPairs(); persistDict();
+}
+async function persistDict() {
+  await fetch("/save", {method:"POST",
+    body: JSON.stringify({custom_vocabulary: vocab, corrections: pairs})});
+}
+
+/* settings */
+function setCleanupLevel(level) {
+  cleanupLevel = level;
+  document.querySelectorAll("#f-cleanup-level button").forEach(b => {
+    b.classList.toggle("on", b.dataset.level === level);
+  });
+}
+document.querySelectorAll("#f-cleanup-level button").forEach(b => {
+  b.onclick = () => setCleanupLevel(b.dataset.level);
+});
+function toggleCleanupLevelRow() {
+  $("cleanup-level-row").style.opacity = $("f-cleanup").checked ? "1" : ".35";
+  $("cleanup-level-row").style.pointerEvents = $("f-cleanup").checked ? "auto" : "none";
+}
+
+async function save() {
+  const body = {
+    hotkey: $("f-hotkey").value, mode: $("f-mode").value,
+    max_seconds: parseInt($("f-max").value || "480"),
+    output_style: $("f-style").value,
+    engine: $("f-engine").value,
+    cleanup: $("f-cleanup").checked,
+    cleanup_level: cleanupLevel,
+    sounds: $("f-sounds").checked,
+  };
+  const key = $("f-key").value.trim();
+  if (key) body.groq_api_key = key;
+  const dgkey = $("f-dgkey").value.trim();
+  if (dgkey) body.deepgram_api_key = dgkey;
+  const r = await fetch("/save", {method:"POST", body: JSON.stringify(body)});
+  $("saved").textContent = r.ok ? "✓ saved — active immediately" : "Save failed — is Koovu running?";
+  if (r.ok && key) {
+    const b = $("b-key"); b.textContent = "CONNECTED"; b.className = "badge ok";
+    $("f-key").value = ""; $("f-key").placeholder = "•••••••••••• (saved)";
+  }
+  if (r.ok && dgkey) {
+    const b = $("b-dg"); b.textContent = "CONNECTED"; b.className = "badge ok";
+    $("f-dgkey").value = ""; $("f-dgkey").placeholder = "•••••••••••• (saved)";
+  }
+  const verb = body.mode === "hold" ? "hold" : "tap";
+  $("hotkey-hint").innerHTML =
+    `${verb} <kbd>${body.hotkey.replace("_"," ")}</kbd> in any text field · talk · ${verb === "tap" ? "tap again" : "release"}`;
+  setTimeout(() => $("saved").textContent = "", 2600);
+}
+
+async function quitApp() {
+  await fetch("/quit", {method: "POST"});
+}
+
+/* account */
+function acctMsg(t) { $("acct-msg").textContent = t || ""; }
+
+function acctRender(st) {
+  const signedIn = st && st.signed_in;
+  $("acct-out").style.display = signedIn ? "none" : "block";
+  $("acct-in").style.display = signedIn ? "block" : "none";
+  if (signedIn) $("a-who").textContent = st.email;
+}
+
+async function acctStatus() {
+  try {
+    const r = await fetch("/account/status");
+    acctRender(await r.json());
+  } catch (e) {}
+}
+
+function acctCreds() {
+  const email = $("a-email").value.trim(), password = $("a-pass").value;
+  if (!email || !email.includes("@")) { acctMsg("Enter your email."); return null; }
+  if (password.length < 8) { acctMsg("Password needs 8+ characters."); return null; }
+  return {email, password};
+}
+
+async function acctSignIn() {
+  const c = acctCreds(); if (!c) return;
+  acctMsg("Signing in…");
+  const r = await fetch("/account/signin", {method:"POST", body: JSON.stringify(c)});
+  const d = await r.json();
+  if (!d.ok) return acctMsg(d.error || "Sign-in failed.");
+  acctMsg(d.synced === "pulled" ? "✓ signed in — settings restored, reloading…"
+                                : "✓ signed in — this Mac's settings uploaded");
+  if (d.synced === "pulled") setTimeout(() => location.reload(), 1200);
+  acctRender({signed_in: true, email: c.email});
+}
+
+async function acctSignUp() {
+  const c = acctCreds(); if (!c) return;
+  acctMsg("Creating account…");
+  const r = await fetch("/account/signup", {method:"POST", body: JSON.stringify(c)});
+  const d = await r.json();
+  if (!d.ok) return acctMsg(d.error || "Sign-up failed.");
+  if (d.needs_confirmation) return acctMsg("✓ check your email to confirm, then sign in");
+  acctMsg("✓ account created & signed in");
+  acctRender({signed_in: true, email: c.email});
+}
+
+async function acctForgot() {
+  const email = $("a-email").value.trim();
+  if (!email || !email.includes("@")) return acctMsg("Type your email above first.");
+  acctMsg("Sending reset email…");
+  const r = await fetch("/account/recover", {method:"POST", body: JSON.stringify({email})});
+  const d = await r.json();
+  acctMsg(d.ok ? "✓ reset link sent — keep Koovu running, then check your email"
+               : (d.error || "Could not send."));
+}
+
+async function acctSync() {
+  acctMsg("Syncing…");
+  const r = await fetch("/account/sync", {method:"POST"});
+  const d = await r.json();
+  acctMsg(d.ok ? "✓ synced" : (d.error || "Sync failed."));
+  setTimeout(() => acctMsg(""), 2500);
+}
+
+async function acctSignOut() {
+  await fetch("/account/signout", {method:"POST"});
+  acctRender({signed_in: false});
+  acctMsg("Signed out. Local settings unchanged.");
+}
+
+init();
+acctStatus();
+refreshPerms();
+</script>
+</body>
+</html>

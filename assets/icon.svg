@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Koovu mark: three audio bars. Use on website, README, social. -->
+  <rect width="512" height="512" rx="112" fill="#0a0a0a"/>
+  <rect x="156" y="176" width="48" height="96" rx="24" fill="#fafafa"/>
+  <rect x="232" y="128" width="48" height="192" rx="24" fill="#fafafa"/>
+  <rect x="308" y="152" width="48" height="144" rx="24" fill="#fafafa"/>
+</svg>
