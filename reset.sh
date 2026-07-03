@@ -12,8 +12,9 @@ rm -rf /Applications/Koovu.app
 rm -rf "$HOME/Downloads/koovu/dist/Koovu.app"
 hdiutil detach /Volumes/Koovu 2>/dev/null || true
 
-echo "→ resetting microphone TCC (survives app delete/reinstall)"
+echo "→ resetting microphone + accessibility TCC (survives app delete/reinstall)"
 tccutil reset Microphone app.koovu.mac 2>/dev/null || true
+tccutil reset Accessibility app.koovu.mac 2>/dev/null || true
 rm -f "$HOME/.koovu/mic_prompt_pending"
 
 echo "→ resetting config (keeps API keys, restarts onboarding)"
