@@ -25,7 +25,7 @@ Wispr Flow is great and costs $15/month. Koovu does the core job for $0:
 **Option A — download the app** (easiest)
 
 1. Grab `Koovu.dmg` from [Releases](../../releases)
-2. Drag Koovu to Applications, right-click → Open (first time only)
+2. Drag Koovu to Applications, then open it normally (double-click — it's signed and notarized, no right-click workaround needed)
 3. Grant the three permissions macOS asks for: **Microphone**, **Accessibility**, **Input Monitoring** (System Settings → Privacy & Security → add Koovu to each)
 4. Click the Koovu icon in your menu bar → Settings → paste your free Groq API key
 
@@ -79,7 +79,7 @@ Groq's free tier covers normal personal use. Beyond it: Whisper large-v3 is ~$0.
 - [ ] Live streaming text while you talk
 - [ ] Accounts, sync, model choice
 - [ ] More Indian languages (Hindi/Hinglish, Telugu, Kannada…)
-- [ ] Signed + notarized builds
+- [x] Signed + notarized builds
 
 ## Troubleshooting
 
@@ -87,5 +87,7 @@ Groq's free tier covers normal personal use. Beyond it: Whisper large-v3 is ~$0.
 - **Nothing pastes** → Accessibility permission missing
 - **No sound recorded** → Microphone permission missing
 - **Ctrl double-tap opens Apple Dictation** → System Settings → Keyboard → Dictation → change or disable its shortcut
+- **Upgrading from an older unsigned build** → macOS ties Mic/Accessibility grants to the app's signature. Run ./reset.sh once after installing the new signed build, then re-grant permissions when asked
+
 
 MIT license. Built with Groq Whisper large-v3 + Llama 3.3.
